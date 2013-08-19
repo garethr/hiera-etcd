@@ -1,0 +1,7 @@
+name        'garethr/hiera_etcd'
+version     '0.0.1'
+source      'git://github.com/garethr/hiera-etcd.git'
+author      'Gareth Rushgrove'
+summary     'Module for installing a etcd hiera backend'
+description 'Use etcd, the distributed configuration service, as a hiera backend'
+license     'Apache License, Version 2.0'
