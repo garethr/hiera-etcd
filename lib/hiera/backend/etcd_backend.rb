@@ -22,8 +22,13 @@ class Hiera
 
         paths.each do |path|
           Hiera.debug("[hiera-etcd]: Lookup #{path}/#{key} on #{@config[:host]}:#{@config[:port]}")
-          result = @client.get("#{path}/#{key}")
-          answer = self.parse_result(result, resolution_type)
+          begin
+            result = @client.get("#{path}/#{key}")
+          rescue
+            Hiera.debug("[hiera-etcd]: bad request key")
+            next
+          end
+          answer = self.parse_result(result, resolution_type, scope)
           next unless answer
           break
         end
@@ -31,7 +36,7 @@ class Hiera
       end
 
 
-      def parse_result(res, type)
+      def parse_result(res, type, scope)
         answer = nil
         case type
         when :array
@@ -51,7 +56,7 @@ class Hiera
             Hiera.warn("[hiera-etcd]: '#{res}' is not in json format, and hash lookup is requested")
           end
         else
-          answer = Backend.parse_answer(result, scope)
+          answer = Backend.parse_answer(res, scope)
         end
         answer
       end
