@@ -7,9 +7,7 @@ class Hiera
         require 'etcd'
         require 'json'
         @config = Config[:http]
-        etcd_uri = "#{@config[:host]}:#{@config[:port]}"
-        @client = Etcd::Client.new(uri: etcd_uri)
-        @client.connect
+        @client = Etcd.client(:host => @config[:host], :port => @config[:port])
       end
 
       def lookup(key, scope, order_override, resolution_type)
@@ -28,7 +26,7 @@ class Hiera
             Hiera.debug("[hiera-etcd]: bad request key")
             next
           end
-          answer = self.parse_result(result, resolution_type, scope)
+          answer = self.parse_result(result.value, resolution_type, scope)
           next unless answer
           break
         end
@@ -43,7 +41,7 @@ class Hiera
           answer ||= []
           begin
             data = Backend.parse_answer(JSON[res], scope)
-            answer << data
+            answer = data.clone
           rescue
             Hiera.warn("[hiera-etcd]: '#{res}' is not in json format, and array lookup is requested")
           end
@@ -51,7 +49,7 @@ class Hiera
           answer ||= {}
           begin
             data = Backend.parse_answer(JSON[res], scope)
-            answer << data
+            answer = data.clone
           rescue
             Hiera.warn("[hiera-etcd]: '#{res}' is not in json format, and hash lookup is requested")
           end
