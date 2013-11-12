@@ -43,12 +43,13 @@ class Hiera
             data = Backend.parse_answer(JSON[res], scope)
           rescue
             Hiera.warn("[hiera-etcd]: '#{res}' is not in json format, and array lookup is requested")
+            return answer
           end
 
           if data.is_a?(Array)
             answer = data.clone
           else
-            Hiera.error("Data is in json format, but this is not an array")
+            Hiera.warn("Data is in json format, but this is not an array")
           end
         when :hash
           answer ||= {}
@@ -56,11 +57,12 @@ class Hiera
             data = Backend.parse_answer(JSON[res], scope)
           rescue
             Hiera.warn("[hiera-etcd]: '#{res}' is not in json format, and hash lookup is requested")
+            return answer
           end
           if data.is_a?(Hash)
             answer = data.clone
           else
-            Hiera.error("Data is in json format, but this is not an hash")
+            Hiera.warn("Data is in json format, but this is not an hash")
           end
         else
           answer = Backend.parse_answer(res, scope)
