@@ -1,5 +1,5 @@
 name        'garethr/hiera_etcd'
-version     '0.0.1'
+version     '0.1.0'
 source      'git://github.com/garethr/hiera-etcd.git'
 author      'Gareth Rushgrove'
 summary     'Module for installing a etcd hiera backend'
