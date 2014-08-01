@@ -20,6 +20,10 @@ class Hiera
 
         paths.each do |path|
           Hiera.debug("[hiera-etcd]: Lookup #{path}/#{key} on #{@config[:host]}:#{@config[:port]}")
+          if "#{path}/#{key}".match("//")
+            Hiera.debug("[hiera-etcd]: The specified path #{path}/#{key} is malformed, skipping")
+            next
+          end
           begin
             result = @client.get("#{path}/#{key}")
           rescue
