@@ -42,6 +42,7 @@ class Hiera
         answer = nil
         case type
         when :array
+          # Called with hiera_array().
           answer ||= []
           begin
             data = Backend.parse_answer(JSON[res], scope)
@@ -56,6 +57,7 @@ class Hiera
             Hiera.warn("Data is in json format, but this is not an array")
           end
         when :hash
+          # Called with hiera_hash().
           answer ||= {}
           begin
             data = Backend.parse_answer(JSON[res], scope)
@@ -69,6 +71,8 @@ class Hiera
             Hiera.warn("Data is in json format, but this is not an hash")
           end
         else
+          # Called with hiera(), which can return an array, hash, or string.
+          res = JSON[res] rescue res
           answer = Backend.parse_answer(res, scope)
         end
         answer
