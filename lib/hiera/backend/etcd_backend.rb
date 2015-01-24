@@ -25,18 +25,34 @@ class Hiera
             next
           end
           begin
-            result = @client.get("#{path}/#{key}")
+            result = @client.get("#{path}/#{key}").node
           rescue
             Hiera.debug("[hiera-etcd]: bad request key")
             next
           end
-          answer = self.parse_result(result.value, resolution_type, scope)
+          answer = self.traverse_node(result, resolution_type, scope)
           next unless answer
           break
         end
         answer
       end
 
+      def traverse_node(node, type, scope)
+        if (node.dir == nil)
+        then
+          return parse_result(node.value, type, scope)
+        else
+          answer ||= {}
+
+          node.children.each do|n|
+            key = n.key
+            # Normalize the key
+            relative_key = key[key.rindex('/')+1..-1]
+            answer[relative_key] = traverse_node(@client.get(key).node, type, scope)
+          end
+          return answer
+        end
+      end
 
       def parse_result(res, type, scope)
         answer = nil
