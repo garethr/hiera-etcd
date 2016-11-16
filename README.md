@@ -20,6 +20,30 @@ The following hiera.yaml should get you started.
         - /configuration/%{fqdn}
         - /configuration/common
 
+## SSL Configuration
+
+    :backends:
+      - etcd
+
+    :http:
+      :host: 127.0.0.1
+      :port: 2379
+      :use_ssl: true
+      :ssl_ca_cert: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+
+## SSL Configuration with Client Authentication
+
+    :backends:
+      - etcd
+
+    :http:
+      :host: 127.0.0.1
+      :port: 2379
+      :use_ssl: true
+      :ssl_ca_cert: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+      :ssl_cert: /etc/pki/tls/certs/localhost.crt
+      :ssl_key: /etc/pki/tls/private/localhost.key
+ 
 
 ## Thanks
 
