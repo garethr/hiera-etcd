@@ -7,7 +7,22 @@ class Hiera
         require 'etcd'
         require 'json'
         @config = Config[:http]
-        @client = Etcd.client(:host => @config[:host], :port => @config[:port])
+        @conn = {
+	  :host    => @config[:host],
+          :port    => @config[:port],
+	}
+        if @config.has_key?(:use_ssl)
+          @conn[:use_ssl] = @config[:use_ssl]  
+          if @conn[:use_ssl]
+            @conn[:ca_file] = @config[:ssl_ca_cert]
+          end
+          if @config.has_key?(:ssl_cert) && @config.has_key?(:ssl_key)
+            @conn[:ssl_cert] = OpenSSL::X509::Certificate.new( File.read(@config[:ssl_cert]) )
+            @conn[:ssl_key] = OpenSSL::PKey::RSA.new( File.read(@config[:ssl_key]), nil)
+          end
+        end
+        Hiera.debug("[hiera-ectd]: Connecting: #{@conn}")
+        @client = Etcd.client(@conn)          
       end
 
       def lookup(key, scope, order_override, resolution_type)
@@ -26,8 +41,8 @@ class Hiera
           end
           begin
             result = @client.get("#{path}/#{key}").node
-          rescue
-            Hiera.debug("[hiera-etcd]: bad request key")
+          rescue Exception => e
+            Hiera.debug("[hiera-etcd]: Error during lookup: " + e.message)
             next
           end
           answer = self.traverse_node(result, resolution_type, scope)
@@ -87,10 +102,24 @@ class Hiera
             Hiera.warn("Data is in json format, but this is not an hash")
           end
         else
+          Hiera.debug("[hiera-etcd]: Parsing result.")
           # Called with hiera(), which can return an array, hash, or string.
           res = JSON[res] rescue res
+          if res.is_a? String
+              if res.to_s == "true"
+                  res = true
+                  Hiera.debug("[hiera-etcd]: Converting string result to boolean True.")
+              elsif res.to_s == "false"
+                  res = false
+                  Hiera.debug("[hiera-etcd]: Converting string result to boolean False.")
+              elsif res.to_i.to_s == res
+                  res = res.to_i
+                  Hiera.debug("[hiera-etcd]: Converting string result to int.")
+              end
+          end
           answer = Backend.parse_answer(res, scope)
         end
+        Hiera.debug("[hiera-etcd]: Have hiera answer '#{answer}', of type: #{answer.class}")
         answer
       end
     end
